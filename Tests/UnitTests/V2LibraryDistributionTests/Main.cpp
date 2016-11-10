@@ -109,15 +109,21 @@ int main(int argc, char* argv[])
 #endif
 
     if (argc != 2)
+    {
+        fprintf(stderr, "Expecting a log file parameter.\n");
         return -1; // Unexpected number of parameters given.
+    }
 
     {
         auto communicator = MPICommunicator();
         std::string logFilename = argv[1] + std::to_string(communicator->CurrentWorker().m_globalRank);
-        freopen(logFilename.c_str(), "w", stdout);
+        auto result = freopen(logFilename.c_str(), "w+q", stdout);
+        if (result == nullptr)
+        {
+            fprintf(stderr, "Could not redirect stdout.\n");
+            return -1;
+        }
     }
-
-    std::this_thread::sleep_for(std::chrono::seconds(15));
 
     // Lets disable automatic unpacking of PackedValue object to detect any accidental unpacking 
     // which will have a silent performance degradation otherwise
