@@ -445,15 +445,6 @@ public:
         AllReduce<ElemType>(static_cast<ElemType*>(MPI_IN_PLACE), sendData, numElements, op);
     }
 
-    template <class ElemType>
-    void AllReduce(ElemType *sendData, ElemType *receiveData, size_t numElements, MPI_Op op = MPI_SUM) const
-    {
-        if ((NumNodesInUse() > 1 && (Communicator() != MPI_COMM_NULL)))
-        {
-            MPI_Allreduce(sendData, receiveData, (int) numElements, GetDataType(sendData), op, Communicator()) || MpiFail("AllReduce: MPI_Allreduce");
-        }
-    }
-
     template <class ElemType> 
     void AllReduceAsync(ElemType* sendData, size_t numElements, MPI_Request* request, MPI_Op op = MPI_SUM) const
     {
@@ -461,48 +452,39 @@ public:
     }
 
     template <class ElemType>
-    void AllReduceAsync(ElemType *sendData, ElemType *receiveData, size_t numElements, MPI_Request* request, MPI_Op op = MPI_SUM) const
+    void AllGatherAsync(const ElemType *sendData, size_t numSendElements, ElemType *receiveData, size_t numRecvElements, MPI_Request* request) const
     {
-        if ((NumNodesInUse() > 1 && (Communicator() != MPI_COMM_NULL)))
-        {
-            MPI_Iallreduce(sendData, receiveData, (int) numElements, GetDataType(sendData), op, Communicator(), request) || MpiFail("AllReduceAsync: MPI_Iallreduce");
-        }
+        MPI_Iallgather(sendData, (int)numSendElements, GetDataType(receiveData), receiveData, (int)numRecvElements, GetDataType(receiveData), Communicator(), request) || MpiFail("AllReduceAsync: MPI_Iallgather");
     }
 
     template <class ElemType>
-    void AllGatherAsync(const ElemType *sendData, size_t numSendElements, ElemType *receiveData, size_t numRecvElements, MPI_Request* request) const
+    void AllReduceAsync(ElemType *sendData, ElemType *receiveData, size_t numElements, MPI_Request* request, MPI_Op op = MPI_SUM) const
     {
-        if ((NumNodesInUse() > 1 && (Communicator() != MPI_COMM_NULL)))
-        {
-            MPI_Iallgather(sendData, (int)numSendElements, GetDataType(receiveData), receiveData, (int)numRecvElements, GetDataType(receiveData), Communicator(), request) || MpiFail("AllReduceAsync: MPI_Iallgather");
-        }
+        MPI_Iallreduce(sendData, receiveData, (int)numElements, GetDataType(sendData), op, Communicator(), request) || MpiFail("AllReduceAsync: MPI_Iallreduce");
+    }
+
+    template <class ElemType>
+    void AllReduce(ElemType *sendData, ElemType *receiveData, size_t numElements, MPI_Op op = MPI_SUM) const
+    {
+        MPI_Allreduce(sendData, receiveData, (int)numElements, GetDataType(sendData), op, Communicator()) || MpiFail("AllReduce: MPI_Allreduce");
     }
 
     template <class ElemType>
     void Gather(const ElemType *sendData, size_t numSendElements, ElemType *receiveData, size_t numRecvElements, size_t rootRank) const
     {
-        if ((NumNodesInUse() > 1 && (Communicator() != MPI_COMM_NULL)))
-        {
-            MPI_Gather(sendData, (int)numSendElements, GetDataType(receiveData), receiveData, (int)numRecvElements, GetDataType(receiveData), (int)rootRank, Communicator()) || MpiFail("AllReduceAsync: MPI_Gather");
-        }
+        MPI_Gather(sendData, (int)numSendElements, GetDataType(receiveData), receiveData, (int)numRecvElements, GetDataType(receiveData), (int)rootRank, Communicator()) || MpiFail("AllReduceAsync: MPI_Gather");
     }
 
     template <class ElemType>
     void Gatherv(const ElemType *sendData, size_t numSendElements, ElemType *receiveData, int recvCounts[], int offsets[], size_t rootRank) const
     {
-        if ((NumNodesInUse() > 1 && (Communicator() != MPI_COMM_NULL)))
-        {
-            MPI_Gatherv(sendData, (int)numSendElements, GetDataType(receiveData), receiveData, recvCounts, offsets, GetDataType(receiveData), (int)rootRank, Communicator()) || MpiFail("AllReduceAsync: MPI_Gatherv");
-        }
+        MPI_Gatherv(sendData, (int)numSendElements, GetDataType(receiveData), receiveData, recvCounts, offsets, GetDataType(receiveData), (int)rootRank, Communicator()) || MpiFail("AllReduceAsync: MPI_Gatherv");
     }
 
     template <class ElemType>
     void Bcast(ElemType *pData, size_t nData, size_t srcRank)
     {
-        if ((NumNodesInUse() > 1) && (Communicator() != MPI_COMM_NULL))
-        {
-            MPI_Bcast(pData, (int) nData, GetDataType(pData), (int) srcRank, Communicator()) || MpiFail("Bcast: MPI_Bcast");
-        }
+        MPI_Bcast(pData, (int) nData, GetDataType(pData), (int) srcRank, Communicator()) || MpiFail("Bcast: MPI_Bcast");
     }
 
     // wait for an async request to finish
