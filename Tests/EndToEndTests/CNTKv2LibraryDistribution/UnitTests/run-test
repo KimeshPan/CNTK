@@ -41,7 +41,7 @@ if [ "$OS" == "Windows_NT" ]; then
   run "$MPI_BINARY" -n $Instances -l $TestBinaryPath $LogPath
 else
   TestBinaryPath=$TEST_BIN_DIR/v2librarydistributiontests
-  run "$MPI_BINARY" -n $Instances -l $TEST_BIN_DIR/v2librarydistributiontests $LogPath
+  run "$MPI_BINARY" -n $Instances $TEST_BIN_DIR/v2librarydistributiontests $LogPath
 fi
 
 sed 's/^/MPI Rank 0: /' "$LogPath"0
