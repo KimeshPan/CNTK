@@ -7,7 +7,7 @@
 
 #include "CNTKLibrary.h"
 #include "Common.h"
-#include <io.h>
+#include <cstdio>
 
 using namespace CNTK;
 using namespace std::placeholders;
