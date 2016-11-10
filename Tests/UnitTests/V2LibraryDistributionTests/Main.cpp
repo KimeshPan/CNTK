@@ -7,6 +7,7 @@
 
 #include "CNTKLibrary.h"
 #include "Common.h"
+#include <io.h>
 
 using namespace CNTK;
 using namespace std::placeholders;
@@ -97,9 +98,8 @@ void TrainSimpleDistributedFeedForwardClassifer(const DeviceDescriptor& device, 
     }
 }
 
-int main(int /*argc*/, char* /*argv*/[])
+int main(int argc, char* argv[])
 {
-
 #if defined(_MSC_VER)
     // in case of asserts in debug mode, print the message into stderr and throw exception
     if (_CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, HandleDebugAssert) == -1) {
@@ -107,6 +107,15 @@ int main(int /*argc*/, char* /*argv*/[])
         return -1;
     }
 #endif
+
+    if (argc != 2)
+        return -1; // Unexpected number of parameters given.
+
+    {
+        auto communicator = MPICommunicator();
+        std::string logFilename = argv[1] + std::to_string(communicator->CurrentWorker().m_globalRank);
+        freopen(logFilename.c_str(), "w", stdout);
+    }
 
     std::this_thread::sleep_for(std::chrono::seconds(15));
 
@@ -144,13 +153,15 @@ int main(int /*argc*/, char* /*argv*/[])
         }
     }
 
-    fprintf(stderr, "\nCNTKv2LibraryDistribution tests: Passed\n");
-    fflush(stderr);
+    printf("\nCNTKv2LibraryDistribution tests: Passed\n");
+    fflush(stdout);
 
 #if defined(_MSC_VER)
     _CrtSetReportHook2(_CRT_RPTHOOK_REMOVE, HandleDebugAssert);
 #endif
 
     DistributedCommunicator::Finalize();
+
+    fclose(stdout);
     return 0;
 }
