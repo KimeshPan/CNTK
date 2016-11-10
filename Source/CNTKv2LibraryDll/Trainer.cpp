@@ -177,6 +177,7 @@ namespace CNTK
 
         m_prevMinibatchNumSamples = GetSampleCount(m_trainingSampleCountVar, outputs[m_trainingSampleCountVar]);
 
+        bool endOfData = m_prevMinibatchNumSamples == 0;
         if (m_distributedTrainer)
         {
             // Aggregation should happen in the same order, the order of parmaters is guaranteed to be the same.
@@ -193,13 +194,9 @@ namespace CNTK
                 m_prevMinibatchAggregateEvalCriterionValue->Data()
             };
 
-            m_distributedTrainer->PreParameterUpdateCallback(*this, gradients, info);
+            endOfData = m_distributedTrainer->PreParameterUpdateCallback(*this, gradients, info);
             m_prevMinibatchNumSamples = info.numberOfSamples;
         }
-
-        // No more samples received. Exiting.
-        if (m_prevMinibatchNumSamples == 0)
-            return false;
 
         bool anyUpdatesPerformed = false;
         for (auto learner : m_parameterLearners)
@@ -217,7 +214,7 @@ namespace CNTK
             anyUpdatesPerformed |= learner->Update(learnerParameterGradients, m_prevMinibatchNumSamples);
         }
 
-        return anyUpdatesPerformed;
+        return anyUpdatesPerformed && !endOfData;
     }
 
     static std::wstring GetTrainerStateCheckpointFilePath(const std::wstring& modelFilePath)
